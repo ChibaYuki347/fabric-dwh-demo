@@ -1,0 +1,61 @@
+name: Data Quality Check
+
+on:
+  pull_request:
+    paths:
+      - 'tests/**'
+      - 'fabric/**'
+      - 'pipelines/**'
+      - 'source_dwh/**'
+  workflow_dispatch:
+
+jobs:
+  data-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify reconciliation test files are present
+        run: |
+          set -e
+          for f in \
+            tests/row_count_reconciliation.sql \
+            tests/aggregate_reconciliation.sql \
+            tests/key_uniqueness_check.sql \
+            tests/null_rate_check.sql; do
+            if [ ! -f "$f" ]; then
+              echo "::error::Required reconciliation test missing: $f" >&2
+              exit 1
+            fi
+          done
+
+      - name: Publish sample reconciliation result to job summary
+        run: |
+          {
+            echo "## Data Quality Sample Results"
+            echo ""
+            cat tests/sample_test_results.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify sample data shape (header + non-empty)
+        run: |
+          set -e
+          declare -A expected=(
+            ["inventory/sample_data/branch.csv"]="BRANCH_ID,BRANCH_NAME,REGION_CD,OPEN_DATE,STATUS_CD,UPDATED_AT"
+            ["inventory/sample_data/customer.csv"]="CUSTOMER_ID,CUSTOMER_SEGMENT,OPEN_DATE,RISK_SCORE,UPDATED_AT"
+            ["inventory/sample_data/account.csv"]="ACCOUNT_ID,CUSTOMER_ID,BRANCH_ID,ACCOUNT_TYPE,STATUS_CD,OPEN_DATE,UPDATED_AT"
+            ["inventory/sample_data/transaction.csv"]="TRANSACTION_ID,ACCOUNT_ID,TRANSACTION_DATE,AMOUNT,CHANNEL_CD,UPDATED_AT"
+          )
+          for f in "${!expected[@]}"; do
+            actual=$(head -n1 "$f" | tr -d '\r')
+            if [ "${expected[$f]}" != "$actual" ]; then
+              echo "::error::Header drift in $f. Expected: ${expected[$f]}" >&2
+              exit 1
+            fi
+            rows=$(($(wc -l < "$f") - 1))
+            echo "$f rows=$rows" | tee -a "$GITHUB_STEP_SUMMARY"
+            if [ "$rows" -le 0 ]; then
+              echo "::error::$f contains no data rows" >&2
+              exit 1
+            fi
+          done

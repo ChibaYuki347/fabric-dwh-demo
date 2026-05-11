@@ -1,0 +1,65 @@
+name: SQL Build Check
+
+on:
+  pull_request:
+    paths:
+      - 'fabric/warehouse_project/**'
+      - 'source_dwh/**'
+      - 'tests/**'
+  workflow_dispatch:
+
+jobs:
+  sql-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: List SQL files under fabric/warehouse_project
+        run: |
+          echo "Fabric Warehouse project files:" | tee -a "$GITHUB_STEP_SUMMARY"
+          find fabric/warehouse_project -name '*.sql' -type f | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail when no Fabric Warehouse SQL is present
+        run: |
+          if [ -z "$(find fabric/warehouse_project -name '*.sql' -type f -print -quit)" ]; then
+            echo "::error::No SQL files found under fabric/warehouse_project. Migration outputs are missing." >&2
+            exit 1
+          fi
+
+      - name: Detect dangerous DDL
+        run: |
+          if grep -RniE "DROP\s+DATABASE|DROP\s+SCHEMA|TRUNCATE\s+TABLE|DROP\s+TABLE" fabric source_dwh tests; then
+            echo "::error::Dangerous DDL detected. Remove or justify in PR description." >&2
+            exit 1
+          fi
+
+      - name: Detect unsupported Netezza-only syntax in Fabric target
+        run: |
+          # Fabric Warehouse T-SQL does not support DISTRIBUTE ON or ORGANIZE ON.
+          # Source files under source_dwh/ are exempt; Fabric targets must be clean.
+          if grep -RniE "DISTRIBUTE\s+ON|ORGANIZE\s+ON" fabric/warehouse_project; then
+            echo "::error::Netezza-only clause leaked into Fabric Warehouse target." >&2
+            exit 1
+          fi
+
+      - name: Basic T-SQL hygiene check
+        run: |
+          # Every Fabric Warehouse object SQL should contain CREATE TABLE / CREATE VIEW / CREATE ROLE / GRANT.
+          set -e
+          missing=0
+          while IFS= read -r f; do
+            if ! grep -qiE "CREATE\s+(TABLE|VIEW|ROLE|PROCEDURE|FUNCTION)|^GRANT\s" "$f"; then
+              echo "::warning file=$f::No CREATE/GRANT statement found"
+              missing=$((missing + 1))
+            fi
+          done < <(find fabric/warehouse_project -name '*.sql' -type f)
+          echo "Files without a CREATE/GRANT statement: $missing" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate inventory CSV header
+        run: |
+          expected="object_name,object_type,source_schema,target_schema,estimated_rows,refresh_pattern,complexity,business_priority"
+          actual=$(head -n1 inventory/dwh_objects.csv | tr -d '\r')
+          if [ "$expected" != "$actual" ]; then
+            echo "::error::inventory/dwh_objects.csv header drifted. Expected: $expected" >&2
+            exit 1
+          fi

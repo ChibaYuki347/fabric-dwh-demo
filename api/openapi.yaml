@@ -1,0 +1,39 @@
+openapi: 3.0.3
+info:
+  title: Branch Balance API
+  version: 0.1.0
+paths:
+  /branch-balances:
+    get:
+      summary: Get branch-level daily balance summary from Fabric curated data
+      parameters:
+        - name: branchId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: businessDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Branch balance summary
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    branchId:
+                      type: integer
+                    businessDate:
+                      type: string
+                      format: date
+                    dailyAmount:
+                      type: number
+                    transactionCount:
+                      type: integer

@@ -1,0 +1,15 @@
+job_name: DAILY_BALANCE_JOB
+source:
+  system: existing_dwh
+  objects:
+    - CORE.ACCOUNT
+    - CORE.TRANSACTION
+target:
+  system: fabric_warehouse
+  object: dbo.DailyBalance
+schedule: daily
+watermark_column: UPDATED_AT
+quality_checks:
+  - row_count_reconciliation
+  - aggregate_reconciliation
+  - duplicate_key_check

@@ -1,0 +1,30 @@
+# WSL / Windows alternate-data-stream artifacts
+*Zone.Identifier
+*:Zone.Identifier
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+
+# Local environment files (never commit secrets)
+.env
+.env.local
+*.local
+
+# Build / dist
+dist/
+build/
+*.egg-info/

@@ -1,0 +1,8 @@
+object_name,object_type,source_schema,target_schema,estimated_rows,refresh_pattern,complexity,business_priority
+CUSTOMER,TABLE,CORE,dbo,1000000,daily,medium,high
+ACCOUNT,TABLE,CORE,dbo,5000000,daily,medium,high
+TRANSACTION,TABLE,CORE,dbo,250000000,intraday,high,high
+BRANCH,TABLE,CORE,dbo,1500,monthly,low,medium
+VW_BRANCH_BALANCE,VIEW,MART,dbo,NA,daily,medium,high
+DAILY_BALANCE,TABLE,MART,dbo,5000000,daily,medium,high
+DAILY_BALANCE_JOB,ETL,ETL,pipeline,NA,daily,high,high

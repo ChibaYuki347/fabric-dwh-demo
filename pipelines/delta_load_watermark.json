@@ -1,0 +1,9 @@
+{
+  "name": "delta_load_watermark",
+  "purpose": "Incremental transaction load using UPDATED_AT watermark",
+  "source": "existing_dwh.CORE.TRANSACTION",
+  "sink": "fabric_warehouse.dbo.Transaction",
+  "load_type": "delta",
+  "watermark_column": "UPDATED_AT",
+  "quality_checks": ["row_count_reconciliation", "aggregate_reconciliation"]
+}

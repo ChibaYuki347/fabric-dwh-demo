@@ -1,0 +1,36 @@
+{
+  "name": "initial_load_transaction_partitioned",
+  "purpose": "Initial bulk load of CORE.TRANSACTION into Fabric Warehouse dbo.Transaction using date-based partitioning to fit within pipeline duration limits",
+  "source": "existing_dwh.CORE.TRANSACTION",
+  "sink": "fabric_warehouse.dbo.Transaction",
+  "load_type": "initial_full_load_partitioned",
+  "partitioning": {
+    "column": "TRANSACTION_DATE",
+    "strategy": "monthly",
+    "from": "2020-01-01",
+    "to": "current_month_start",
+    "parallelism": 4
+  },
+  "staging": {
+    "system": "azure_data_lake_gen2",
+    "account": "stdwhdemostaging",
+    "container": "bronze",
+    "path": "core/transaction/{yyyy}/{mm}/"
+  },
+  "auth": {
+    "mode": "managed_identity",
+    "key_vault_reference": "kv-dwh-demo/secrets/stdwhdemostaging-sas"
+  },
+  "quality_checks": [
+    "row_count_reconciliation",
+    "aggregate_reconciliation",
+    "key_uniqueness_check",
+    "null_rate_check"
+  ],
+  "retry_policy": {
+    "max_attempts": 3,
+    "interval_seconds": 60,
+    "backoff": "exponential"
+  },
+  "rollback_strategy": "On failure, leave dbo.Transaction empty for the failing partition and surface the failed partition in the runbook. Do not auto-truncate previously loaded partitions."
+}

@@ -1,0 +1,8 @@
+{
+  "name": "initial_load_customer",
+  "purpose": "Copy synthetic customer data from source DWH staging to Fabric Warehouse dbo.Customer",
+  "source": "existing_dwh.CORE.CUSTOMER",
+  "sink": "fabric_warehouse.dbo.Customer",
+  "load_type": "initial_full_load",
+  "quality_checks": ["row_count_reconciliation", "key_uniqueness_check"]
+}

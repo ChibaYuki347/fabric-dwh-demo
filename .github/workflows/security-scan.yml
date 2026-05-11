@@ -1,0 +1,52 @@
+name: Security Scan
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan for hardcoded secrets and connection strings
+        run: |
+          set -e
+          # Limit scope to source files; do not scan .git or docs that intentionally describe patterns.
+          # We exclude this workflow and the risk register because they document the patterns
+          # themselves and would otherwise be self-flagged.
+          # The egrep alternation below matches the most common leak patterns; CI must fail when any hit is found.
+          if grep -RniE \
+              "password=[^\$]|accountkey=|sas_token=|client_secret=|api[_-]?key=|bearer\s+[a-z0-9._-]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----" \
+              --include='*.sql' --include='*.json' --include='*.yaml' --include='*.yml' \
+              --include='*.py' --include='*.ts' --include='*.js' --include='*.md' \
+              --exclude='security-scan.yml' \
+              --exclude='risk_register.md' \
+              .; then
+            echo "::error::Potential secret or credential pattern detected." >&2
+            exit 1
+          fi
+
+      - name: Forbid real customer data markers
+        run: |
+          # Synthetic data only. Block obvious markers of real PII like mynumber / マイナンバー.
+          # Scope is restricted to data-bearing files (CSV/SQL/JSON/YAML/code). Narrative .md docs
+          # describe the rule and would otherwise self-flag.
+          if grep -RniE "mynumber|マイナンバー|本人確認書類|実顧客|本番データ" \
+              --include='*.csv' --include='*.sql' --include='*.json' \
+              --include='*.yaml' --include='*.yml' --include='*.py' \
+              --include='*.ts' --include='*.js' \
+              --exclude-dir=.git \
+              --exclude='security-scan.yml' \
+              .; then
+            echo "::error::Pattern suggesting real customer data found in a data/code file. Demo repo must be synthetic only." >&2
+            exit 1
+          fi
+
+      - name: Ensure copilot-instructions are present and not empty
+        run: |
+          test -s .github/copilot-instructions.md || {
+            echo "::error::.github/copilot-instructions.md missing or empty." >&2
+            exit 1
+          }
