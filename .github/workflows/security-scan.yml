@@ -14,15 +14,13 @@ jobs:
         run: |
           set -e
           # Limit scope to source files; do not scan .git or docs that intentionally describe patterns.
-          # We exclude this workflow and the risk register because they document the patterns
-          # themselves and would otherwise be self-flagged.
           # The egrep alternation below matches the most common leak patterns; CI must fail when any hit is found.
+          # We exclude this workflow file itself because it lists the patterns it must catch.
           if grep -RniE \
               "password=[^\$]|accountkey=|sas_token=|client_secret=|api[_-]?key=|bearer\s+[a-z0-9._-]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----" \
               --include='*.sql' --include='*.json' --include='*.yaml' --include='*.yml' \
               --include='*.py' --include='*.ts' --include='*.js' --include='*.md' \
               --exclude='security-scan.yml' \
-              --exclude='risk_register.md' \
               .; then
             echo "::error::Potential secret or credential pattern detected." >&2
             exit 1

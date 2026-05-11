@@ -1,6 +1,6 @@
 # アーキテクチャ（1 枚版）
 
-本図は、デモのオープニング 3 分で見せる「現行 DWH → GitHub 移行ファクトリ → Microsoft Fabric → Power BI / API / AI エージェント」の関係を 1 画面に集約したものである。`docs/demo_script.md` のシーン 0 でそのまま投影する。
+本図は、デモのオープニングで見せる「現行 DWH → GitHub 移行ファクトリ → Microsoft Fabric → Power BI / API / AI エージェント」の関係を 1 画面に集約したものである。
 
 ```mermaid
 flowchart LR
@@ -66,7 +66,6 @@ flowchart LR
 
 ## 関連ファイル
 
-- `docs/demo_script.md`: 各シーンの読み合わせ用台本
 - `docs/sql_dialect_mapping.md`: Netezza → Fabric T-SQL の方言マッピング
 - `docs/copilot_prompt_cards.md`: Copilot 実演用プロンプトカード
 - `fabric/lakehouse/bronze_to_silver_mapping.md`: Bronze → Silver の列マッピング

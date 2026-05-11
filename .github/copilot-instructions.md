@@ -4,7 +4,6 @@
 This repository demonstrates migration from an existing IBM PureData / Netezza-style DWH to Microsoft Fabric. All generated code is draft and requires human review. Treat this repository as a migration factory template, not as a production deployment artifact.
 
 ## Repository Layout
-- `instructions/docs/`: Source-of-truth Requirements / Design / Todos for the demo itself (Japanese).
 - `source_dwh/`: Synthetic Netezza-style DDL, views, ETL metadata. Never edit to look like real customer schemas.
 - `fabric/warehouse_project/`: Fabric Warehouse target SQL (T-SQL). Mirrors a SQL database project layout.
 - `fabric/lakehouse/`: Bronze/Silver mapping notes.
@@ -12,7 +11,7 @@ This repository demonstrates migration from an existing IBM PureData / Netezza-s
 - `tests/`: Reconciliation and quality SQL plus published sample results.
 - `api/`: OpenAPI and FastAPI stub that exposes curated Fabric outputs.
 - `inventory/`: Object inventory, dependency map, complexity scoring, synthetic sample CSVs.
-- `docs/`: Demo script, runbook, risk register, PoC plan, architecture, prompt cards, sample PR kit, offline kit.
+- `docs/`: Architecture diagram, Copilot prompt cards, SQL dialect mapping, PoC plan.
 - `.github/`: Copilot instructions, PR template, workflows, scoped instruction files.
 
 ## Azure and Fabric Resources
@@ -23,7 +22,7 @@ This repository demonstrates migration from an existing IBM PureData / Netezza-s
 - Azure Data Lake Storage Gen2 or Blob staging account: stdwhdemostaging
 - Self-hosted Integration Runtime: shir-onprem-dwh-demo
 - Azure Key Vault: kv-dwh-demo
-- GitHub Repository: fabric-dwh-migration-factory-demo
+- GitHub Repository: fabric-dwh-demo
 - GitHub Actions Environments: dev, test, prod
 
 ## Migration Rules

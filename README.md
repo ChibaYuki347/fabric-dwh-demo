@@ -1,6 +1,6 @@
 # Fabric DWH Migration Factory Demo
 
-既存DWH（IBM PureData / Netezza想定）を Microsoft Fabric へ統合する流れを、**GitHubを中核とした移行ファクトリ**として運営する姿を顧客に見せるためのデモリポジトリ。
+既存DWH（IBM PureData / Netezza想定）を Microsoft Fabric へ統合する流れを、**GitHubを中核とした移行ファクトリ**として運営する姿を示すデモリポジトリ。
 
 > 既存DWHのFabric統合を、**Gitで管理し、Copilotで加速し、人間がレビューし、Fabricへ安全に反映する。**
 
@@ -8,23 +8,22 @@
 
 ## デモのストーリー
 
-`docs/architecture.md` の 1 枚図で全体像を、`docs/demo_script.md` の 7 シーン台本（35〜40 分）でテンポを掴むこと。`docs/copilot_prompt_cards.md` のプロンプトをそのまま使えばリハーサル無しでも実演可能。
+`docs/architecture.md` の 1 枚図で全体像を、`docs/copilot_prompt_cards.md` のプロンプトをそのまま使えば Copilot 実演ができる。Netezza → Fabric T-SQL の方言差分は `docs/sql_dialect_mapping.md`、PoC への接続は `docs/poc_plan.md` を参照。
 
-| シーン | 所要 | 中心資材 |
-|---|---:|---|
-| 0. オープニング | 3 分 | `docs/architecture.md` |
-| 1. 既存 DWH 資産の取り込み | 5 分 | `inventory/`、`source_dwh/` |
-| 2. Copilot による変換支援 | 8 分 | `source_dwh/ddl/` → `fabric/warehouse_project/Tables/` |
-| 3. Pull Request と品質ゲート | 8 分 | `docs/sample_pr/`、`.github/workflows/` |
-| 4. Fabric 反映イメージ | 6 分 | `fabric/`、`pipelines/` |
-| 5. API・AI 連携 | 5 分 | `api/openapi.yaml`、`api/src/` |
-| 6. クロージング | 5 分 | `docs/poc_plan.md` |
+| シーン | 中心資材 |
+|---|---|
+| 0. オープニング | `docs/architecture.md` |
+| 1. 既存 DWH 資産の取り込み | `inventory/`、`source_dwh/` |
+| 2. Copilot による変換支援 | `source_dwh/ddl/` → `fabric/warehouse_project/Tables/` |
+| 3. Pull Request と品質ゲート | `.github/workflows/`、`.github/pull_request_template.md` |
+| 4. Fabric 反映イメージ | `fabric/`、`pipelines/` |
+| 5. API・AI 連携 | `api/openapi.yaml`、`api/src/` |
+| 6. クロージング | `docs/poc_plan.md` |
 
 ## ディレクトリ案内
 
 | ディレクトリ | 内容 |
 |---|---|
-| `instructions/docs/` | 本デモの Requirements / Design / Todos（最上位の真実） |
 | `source_dwh/` | 既存 DWH 想定の合成 DDL・ビュー・ETL メタ |
 | `fabric/warehouse_project/` | Fabric Warehouse 向け T-SQL（Tables / Views / post-deployment） |
 | `fabric/lakehouse/` | Bronze → Silver 列マッピング |
@@ -32,22 +31,18 @@
 | `tests/` | 再照合テスト SQL とサンプル結果 |
 | `api/` | OpenAPI と FastAPI スタブ、契約テスト |
 | `inventory/` | オブジェクト棚卸し、依存マップ、移行複雑度、合成サンプル CSV |
-| `docs/` | デモ台本、Runbook、PoC 計画、リスク登録簿、アーキ図、Copilot プロンプトカード、SQL 方言マッピング、サンプル PR キット、オフラインキット |
+| `docs/` | アーキ図、Copilot プロンプトカード、SQL 方言マッピング、PoC 計画 |
 | `.github/` | Copilot 指示書、PR テンプレ、ワークフロー、対象パス別 instructions |
 
-## デモ前にやること
+## CI ワークフロー
 
-1. **デモ方式を選ぶ**: `instructions/docs/Design.md` §10 から A / B / C いずれかを決める。初回は A（リポジトリ完結型）推奨。
-2. **オフライン対策**: `docs/offline_kit/screenshots_index.md` に従ってスクリーンショットを取得する。R-08 緩和。
-3. **Copilot 動作確認**: VS Code で `.github/copilot-instructions.md` が読み込まれることを確認し、`docs/copilot_prompt_cards.md` のカード #1 を 1 回試す。
-4. **CI 緑色化**: 本リポジトリを GitHub 上にミラーし、`.github/workflows/` の 3 ジョブが緑になることを確認する。
-5. **35〜40 分リハーサル**: `docs/demo_script.md` のシーン 0〜6 を通しで読み合わせる。
+| Workflow | 目的 |
+|---|---|
+| `.github/workflows/sql-build.yml` | 危険 DDL の検知、Netezza 方言の漏れ検知、Fabric T-SQL 衛生チェック、棚卸し CSV のヘッダ固定 |
+| `.github/workflows/data-quality-check.yml` | 合成 CSV のヘッダ整合性、再照合テスト SQL の存在確認 |
+| `.github/workflows/security-scan.yml` | シークレットパターン検知、PII 語彙検知、Copilot 指示書の存在確認 |
 
-## デモ後にやること
-
-- `docs/poc_plan.md` を顧客版に書き換え、6 週間 PoC を提案する。
-- `docs/risk_register.md` の `status: open` を確認し、PoC 中の閉じ込みを計画する。
-- `instructions/docs/Todos.md` を顧客側 PJ 計画に取り込み、担当・期日を埋める。
+すべて `pull_request` と `workflow_dispatch` で起動する。Copilot との連携は `.github/copilot-instructions.md` と `.github/instructions/*.instructions.md` が定義する。
 
 ## 注意事項
 

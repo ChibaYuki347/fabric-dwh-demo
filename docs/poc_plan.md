@@ -24,9 +24,9 @@
 | 1 | 代表業務ドメインの選定と既存資産の棚卸し | `inventory/dwh_objects.csv` 拡充、`inventory/dependency_map.md`、`inventory/migration_complexity.md` | 移行対象 10〜20 オブジェクトの一覧が確定 |
 | 2 | 移行ファクトリ scaffold の確立 | リポジトリ、`.github/copilot-instructions.md`、PR テンプレート、Actions、`docs/copilot_prompt_cards.md` | 1 件のサンプル PR が緑色で merge できる |
 | 3 | DDL とビューの一次変換 | `fabric/warehouse_project/Tables/`、`Views/` の draft 一式、`docs/sql_dialect_mapping.md` 拡充 | 主要 5 テーブル + 主要 2 ビューが Fabric Warehouse に反映可能 |
-| 4 | 初期ロード・差分ロードの実装 | `pipelines/initial_load_*.json`、`pipelines/delta_load_*.json`、`docs/runbook.md` 拡充 | 取引系テーブルでパーティション初期ロードと watermark 差分ロードが疎通 |
+| 4 | 初期ロード・差分ロードの実装 | `pipelines/initial_load_*.json`、`pipelines/delta_load_*.json` | 取引系テーブルでパーティション初期ロードと watermark 差分ロードが疎通 |
 | 5 | データ品質テストとレビュー運用 | `tests/*.sql`、`tests/sample_test_results.md`、Copilot Code Review 運用ルール | CI 全 3 ワークフローで合計 1 件以上の検知/防止事例を記録 |
-| 6 | 量産移行展開計画 | 量産見積、テンプレート集、`docs/poc_plan.md` 更新、`docs/risk_register.md` 更新 | 横展開計画と次フェーズ提案資料が顧客内承認に進める状態 |
+| 6 | 量産移行展開計画 | 量産見積、テンプレート集、`docs/poc_plan.md` 更新 | 横展開計画と次フェーズ提案資料が顧客内承認に進める状態 |
 
 ## 評価指標（KPI 候補）
 
