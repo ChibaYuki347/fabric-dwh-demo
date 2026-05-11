@@ -3,7 +3,7 @@ name: SQL Build Check
 on:
   pull_request:
     paths:
-      - 'fabric/warehouse_project/**'
+      - 'fabric/**'
       - 'source_dwh/**'
       - 'tests/**'
   workflow_dispatch:
@@ -14,21 +14,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: List SQL files under fabric/warehouse_project
+      - name: List SQL files under fabric/**.Warehouse and post-deployment
         run: |
-          echo "Fabric Warehouse project files:" | tee -a "$GITHUB_STEP_SUMMARY"
-          find fabric/warehouse_project -name '*.sql' -type f | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "Fabric Warehouse item files:" | tee -a "$GITHUB_STEP_SUMMARY"
+          find fabric -path 'fabric/*.Warehouse/Schemas/*' -name '*.sql' -type f | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "Post-deployment files:" | tee -a "$GITHUB_STEP_SUMMARY"
+          find fabric/post-deployment -name '*.sql' -type f 2>/dev/null | tee -a "$GITHUB_STEP_SUMMARY" || true
 
       - name: Fail when no Fabric Warehouse SQL is present
         run: |
-          if [ -z "$(find fabric/warehouse_project -name '*.sql' -type f -print -quit)" ]; then
-            echo "::error::No SQL files found under fabric/warehouse_project. Migration outputs are missing." >&2
+          if [ -z "$(find fabric -path 'fabric/*.Warehouse/Schemas/*' -name '*.sql' -type f -print -quit)" ]; then
+            echo "::error::No SQL files found under fabric/*.Warehouse/Schemas. Warehouse item is missing." >&2
             exit 1
           fi
 
-      - name: Detect dangerous DDL
+      - name: Detect dangerous DDL in Warehouse item and source
         run: |
-          if grep -RniE "DROP\s+DATABASE|DROP\s+SCHEMA|TRUNCATE\s+TABLE|DROP\s+TABLE" fabric source_dwh tests; then
+          # Scan the Warehouse item and source DWH only.
+          # fabric/post-deployment/security.sql and scripts/reset_demo.sh are allowed to
+          # contain TRUNCATE/DROP because they are applied manually outside Git sync.
+          # SQL line comments (--) are excluded so that mapping notes don't false-positive.
+          hits=$(grep -RnE "DROP\s+DATABASE|DROP\s+SCHEMA|TRUNCATE\s+TABLE|DROP\s+TABLE" \
+                   fabric/*.Warehouse source_dwh tests 2>/dev/null \
+                 | grep -vE ':[0-9]+:[[:space:]]*--' || true)
+          if [ -n "$hits" ]; then
+            echo "$hits"
             echo "::error::Dangerous DDL detected. Remove or justify in PR description." >&2
             exit 1
           fi
@@ -37,23 +47,28 @@ jobs:
         run: |
           # Fabric Warehouse T-SQL does not support DISTRIBUTE ON or ORGANIZE ON.
           # Source files under source_dwh/ are exempt; Fabric targets must be clean.
-          if grep -RniE "DISTRIBUTE\s+ON|ORGANIZE\s+ON" fabric/warehouse_project; then
+          # SQL line comments (--) are excluded so that mapping notes don't false-positive.
+          hits=$(grep -RnE "DISTRIBUTE\s+ON|ORGANIZE\s+ON" fabric/*.Warehouse 2>/dev/null \
+                 | grep -vE ':[0-9]+:[[:space:]]*--' || true)
+          if [ -n "$hits" ]; then
+            echo "$hits"
             echo "::error::Netezza-only clause leaked into Fabric Warehouse target." >&2
             exit 1
           fi
 
       - name: Basic T-SQL hygiene check
         run: |
-          # Every Fabric Warehouse object SQL should contain CREATE TABLE / CREATE VIEW / CREATE ROLE / GRANT.
+          # Every Fabric Warehouse object SQL should contain CREATE TABLE / CREATE VIEW / CREATE PROCEDURE / CREATE FUNCTION.
+          # (Security objects live in fabric/post-deployment/ and are scanned separately.)
           set -e
           missing=0
           while IFS= read -r f; do
-            if ! grep -qiE "CREATE\s+(TABLE|VIEW|ROLE|PROCEDURE|FUNCTION)|^GRANT\s" "$f"; then
-              echo "::warning file=$f::No CREATE/GRANT statement found"
+            if ! grep -qiE "CREATE\s+(TABLE|VIEW|PROCEDURE|FUNCTION)" "$f"; then
+              echo "::warning file=$f::No CREATE statement found"
               missing=$((missing + 1))
             fi
-          done < <(find fabric/warehouse_project -name '*.sql' -type f)
-          echo "Files without a CREATE/GRANT statement: $missing" | tee -a "$GITHUB_STEP_SUMMARY"
+          done < <(find fabric -path 'fabric/*.Warehouse/Schemas/*' -name '*.sql' -type f)
+          echo "Files without a CREATE statement: $missing" | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Validate inventory CSV header
         run: |

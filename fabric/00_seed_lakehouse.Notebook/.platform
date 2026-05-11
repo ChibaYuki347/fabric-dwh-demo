@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "00_seed_lakehouse",
+    "description": "Downloads synthetic CSVs from the public GitHub repo into RawZone lakehouse Files/raw/."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "5c2e2f8a-4c51-4d9f-9b31-2e34b5678901"
+  }
+}

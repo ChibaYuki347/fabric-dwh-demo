@@ -5,7 +5,9 @@ This repository demonstrates migration from an existing IBM PureData / Netezza-s
 
 ## Repository Layout
 - `source_dwh/`: Synthetic Netezza-style DDL, views, ETL metadata. Never edit to look like real customer schemas.
-- `fabric/warehouse_project/`: Fabric Warehouse target SQL (T-SQL). Mirrors a SQL database project layout.
+- `fabric/DWH_Modernization_Demo.Warehouse/`: Fabric Warehouse item (Git integration format: `.platform` + `Schemas/dbo/{Tables,Views}/*.sql`). Mirrors the SQL database project layout that Fabric round-trips.
+- `fabric/00_seed_lakehouse.Notebook/`, `fabric/01_load_warehouse.Notebook/`, `fabric/02_validate.Notebook/`: Fabric Notebook items in Git integration format (`.platform` + `notebook-content.py` with `# CELL ********************` / `# MARKDOWN ********************` separators).
+- `fabric/post-deployment/`: Security DDL (`CREATE ROLE`, `GRANT`). NOT synced by Fabric Git integration; applied manually via `scripts/reset_demo.sh --security`.
 - `fabric/lakehouse/`: Bronze/Silver mapping notes.
 - `pipelines/`: Fabric Data Factory pipeline definitions in JSON.
 - `tests/`: Reconciliation and quality SQL plus published sample results.
@@ -40,6 +42,13 @@ This repository demonstrates migration from an existing IBM PureData / Netezza-s
 - Use a watermark column (typically `UPDATED_AT`) for delta loads on transaction-like tables.
 - Partition large initial loads (`pipelines/initial_load_transaction_partitioned.json` pattern).
 - Reference credentials only via Key Vault or managed identity. Never inline secrets.
+
+## Fabric Notebook Rules
+- Notebooks under `fabric/*.Notebook/` are stored in Git integration format. Edit `notebook-content.py` directly using the `# CELL ********************` and `# MARKDOWN ********************` separators; do not rewrite the file structure.
+- Markdown cell content must be prefixed with `# ` (each line) so the file stays a valid Python source.
+- Each cell ends with a `# METADATA ********************` block declaring the cell language (`python`, `markdown`, `synapsesql`). Keep the trailing METADATA block on every cell.
+- Notebooks must NOT hard-code workspace / lakehouse GUIDs. The presenter binds the lakehouse via the *Add lakehouse* panel after the Notebook is created.
+- Spark -> Warehouse writes use `df.write.mode("append").synapsesql("DWH_Modernization_Demo.dbo.<Table>")`. Always cast columns explicitly before write; CSV-inferred types will not match Warehouse types.
 
 ## API Rules
 - Define the OpenAPI contract first, then implement against curated Fabric outputs.

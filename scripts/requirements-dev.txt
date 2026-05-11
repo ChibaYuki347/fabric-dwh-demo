@@ -1,0 +1,12 @@
+# Optional tooling for presenters and contributors.
+# Production / CI deps live in tests/ — see .github/workflows/sql-build.yml.
+
+# Local Warehouse stand-in
+duckdb>=1.1.0
+
+# Used by tests/ (pytest discovery, CSV checks)
+pytest>=8.0
+pandas>=2.2
+
+# Optional: only needed by scripts/reset_demo.sh if you prefer pyodbc over sqlcmd
+# pyodbc>=5.1

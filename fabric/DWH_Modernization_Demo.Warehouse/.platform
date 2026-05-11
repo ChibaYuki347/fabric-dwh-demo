@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Warehouse",
+    "displayName": "DWH_Modernization_Demo",
+    "description": "Curated DWH for the Netezza-to-Fabric demo. Tables are owned by Git; data is loaded by notebooks."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "4d4e5fa1-3b40-4c8e-8a2f-1d23a4567890"
+  }
+}

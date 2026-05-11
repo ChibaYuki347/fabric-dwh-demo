@@ -1,4 +1,4 @@
--- Fabric Warehouse target draft generated from source_dwh/ddl/nz_branch.sql
+-- Fabric Warehouse target ported from source_dwh/ddl/nz_branch.sql
 -- Mapping notes:
 --   * VARCHAR widths preserved.
 --   * TIMESTAMP -> DATETIME2(6) keeps sub-second precision used by source ETL.

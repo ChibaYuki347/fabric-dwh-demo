@@ -14,7 +14,7 @@
 |---|---|
 | 0. オープニング | `docs/architecture.md` |
 | 1. 既存 DWH 資産の取り込み | `inventory/`、`source_dwh/` |
-| 2. Copilot による変換支援 | `source_dwh/ddl/` → `fabric/warehouse_project/Tables/` |
+| 2. Copilot による変換支援 | `source_dwh/ddl/` → `fabric/DWH_Modernization_Demo.Warehouse/Schemas/dbo/Tables/` |
 | 3. Pull Request と品質ゲート | `.github/workflows/`、`.github/pull_request_template.md` |
 | 4. Fabric 反映イメージ | `fabric/`、`pipelines/` |
 | 5. API・AI 連携 | `api/openapi.yaml`、`api/src/` |
@@ -25,13 +25,16 @@
 | ディレクトリ | 内容 |
 |---|---|
 | `source_dwh/` | 既存 DWH 想定の合成 DDL・ビュー・ETL メタ |
-| `fabric/warehouse_project/` | Fabric Warehouse 向け T-SQL（Tables / Views / post-deployment） |
-| `fabric/lakehouse/` | Bronze → Silver 列マッピング |
+| `fabric/DWH_Modernization_Demo.Warehouse/` | Fabric Warehouse アイテム（Git integration 形式: `.platform` + `Schemas/dbo/{Tables,Views}/*.sql`） |
+| `fabric/00_seed_lakehouse.Notebook/`<br>`fabric/01_load_warehouse.Notebook/`<br>`fabric/02_validate.Notebook/` | Fabric Notebook アイテム（CSV ロード・検証用） |
+| `fabric/post-deployment/` | Workspace 同期では反映されない GRANT/CREATE ROLE。`scripts/reset_demo.sh --security` で適用 |
+| `fabric/lakehouse/` | Bronze → Silver 列マッピング設計メモ |
 | `pipelines/` | Fabric Data Factory パイプライン定義（初期 / パーティション初期 / 差分） |
 | `tests/` | 再照合テスト SQL とサンプル結果 |
 | `api/` | OpenAPI と FastAPI スタブ、契約テスト |
 | `inventory/` | オブジェクト棚卸し、依存マップ、移行複雑度、合成サンプル CSV |
-| `docs/` | アーキ図、Copilot プロンプトカード、SQL 方言マッピング、PoC 計画 |
+| `scripts/` | `reset_demo.sh`（Warehouse TRUNCATE）と `local_smoke.py`（DuckDB スモーク） |
+| `docs/` | アーキ図、Copilot プロンプトカード、SQL 方言マッピング、PoC 計画、ローカル環境セットアップ |
 | `.github/` | Copilot 指示書、PR テンプレ、ワークフロー、対象パス別 instructions |
 
 ## CI ワークフロー
@@ -44,8 +47,27 @@
 
 すべて `pull_request` と `workflow_dispatch` で起動する。Copilot との連携は `.github/copilot-instructions.md` と `.github/instructions/*.instructions.md` が定義する。
 
+## Live demo を試す
+
+VS Code + Copilot Chat から書いた T-SQL を、GitHub 経由で実際の **Fabric Workspace** に反映するライブデモを動かせます。Fabric Trial Capacity（無料）と Microsoft Entra ID テナントがあれば再現可能です。
+
+```text
+[VS Code + Copilot]
+   └─ Copilot が Netezza DDL を T-SQL 化、 fabric/DWH_Modernization_Demo.Warehouse/Schemas/dbo/Tables/ に追加
+      └─ branch push & PR
+         └─ GitHub Actions (sql-build / data-quality / security-scan)
+            └─ merge to main
+               └─ Fabric Workspace -> Source control -> Update from Git
+                  └─ Warehouse に CREATE TABLE が反映
+                     └─ Notebook 00 -> 01 -> 02 を実行
+                        └─ Lakehouse から CSV ロード、再照合テストが緑
+```
+
+セットアップ手順は **[`docs/local_setup.md`](docs/local_setup.md)** を参照。当日進行は `docs/copilot_prompt_cards.md` のカード #1 / #5 / #7 / #8 をそのまま使ってください。
+
 ## 注意事項
 
 - 本リポジトリは**デモ用**です。`.github/copilot-instructions.md` に書かれた Azure / Fabric リソース名はデモ向けの架空値であり、本番テナントには接続しません。
 - 合成データのみを扱います。実顧客情報・実取引・本物のシークレットを混入させないでください。`.github/workflows/security-scan.yml` が CI で検知します。
 - 本リポジトリの内容は移行手順の**雛形**です。本番運用に投入する前に、`docs/sql_dialect_mapping.md` を顧客 DWH の方言に合わせて拡張し、`tests/` の閾値を業務側と合意してください。
+- Fabric の **Workspace Git integration** で同期される範囲は Warehouse スキーマと Notebook です。`CREATE ROLE` / `GRANT` などのセキュリティ DDL は **同期対象外** のため、`fabric/post-deployment/security.sql` を `scripts/reset_demo.sh --security` で別途適用してください（公式仕様）。

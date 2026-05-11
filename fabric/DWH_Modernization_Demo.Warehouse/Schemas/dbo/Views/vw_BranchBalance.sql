@@ -1,3 +1,7 @@
+-- Curated view exposed to BI / API readers.
+-- Source: dbo.Account JOIN dbo.[Transaction] aggregated to (BranchId, TransactionDate).
+-- This view (not the base tables) is granted to the reader role in
+-- fabric/post-deployment/security.sql.
 CREATE VIEW dbo.vw_BranchBalance AS
 SELECT
     a.BranchId,

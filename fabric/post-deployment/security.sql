@@ -1,5 +1,13 @@
 -- Post-deployment security script for the Fabric Warehouse target.
--- Applied after Tables/ and Views/ are deployed.
+--
+-- IMPORTANT
+-- ---------
+-- Fabric Git integration does NOT include security objects (roles/GRANT) in the
+-- Warehouse item. After the Warehouse is created via "Update from Git", run this
+-- script manually against DWH_Modernization_Demo using either:
+--   * the Fabric portal SQL editor, or
+--   * scripts/reset_demo.sh which connects via ODBC and applies it.
+--
 -- Principles:
 --   * Use Microsoft Entra ID groups, never SQL logins with passwords.
 --   * Grant the minimum required object-level privileges.

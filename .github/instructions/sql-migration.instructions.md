@@ -1,7 +1,8 @@
 ---
 applyTo:
   - "source_dwh/**/*.sql"
-  - "fabric/warehouse_project/**/*.sql"
+  - "fabric/*.Warehouse/**/*.sql"
+  - "fabric/post-deployment/**/*.sql"
   - "tests/**/*.sql"
 ---
 
