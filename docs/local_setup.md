@@ -8,6 +8,42 @@
 
 ---
 
+## 0. Fabric Workspace が作れない場合（よくある罠）
+
+`app.fabric.microsoft.com` の Workspace 作成画面で **Advanced > Workspace type に Fabric / Fabric Trial が出ない**（Power BI Pro しか選べない）ことがあります。これはテナント側で Fabric が無効化されているサインです。
+
+### 切り分け早見表
+
+| 症状 | 行うこと |
+|---|---|
+| 右上アバターに **Start trial** が見えている | クリックしてリージョン選択 → 60 日 Trial 起動 |
+| **Trial status** が既に出ている | Workspace 作成画面で Advanced → Workspace type に Fabric Trial が出るはず（ブラウザ再ログイン） |
+| Fabric 自体のメニューが出ない | テナント設定でブロックされています ↓ |
+
+### 対処 (テナント管理者がいる場合)
+
+社内 Fabric / Power BI 管理者に依頼:
+
+1. Admin portal → Tenant settings → **Users can create Fabric items** を Enabled
+2. 同じく **Users can try Microsoft Fabric paid features** を Enabled
+
+設定反映は最大 15 分。再ログインで右上アバターに **Start trial** が出ます。
+
+公式手順: <https://learn.microsoft.com/fabric/admin/fabric-switch> / <https://learn.microsoft.com/fabric/fundamentals/fabric-trial>
+
+### 対処 (有償課金が許容できる場合)
+
+Azure portal で **Microsoft Fabric capacity F2** を作成すれば、テナント設定に依存せず Workspace に紐付けられます。per-second 課金、Pause で停止可能、F2 は東日本で ≈ ¥45/時間。
+
+```text
+Azure portal → Create a resource → "Microsoft Fabric" → F2 → Region: Japan East
+→ Capacity admin: 自分の UPN → Create
+```
+
+5 分ほど待ってから Fabric ポータルで Workspace 作成 → Advanced → Capacity に上記を指定。
+
+---
+
 ## 1. 必要なソフトウェア
 
 | ツール | 用途 | インストール |
