@@ -3,6 +3,7 @@ applyTo:
   - "source_dwh/**/*.sql"
   - "fabric/*.Warehouse/**/*.sql"
   - "fabric/post-deployment/**/*.sql"
+  - "fabric/*.sql"
   - "tests/**/*.sql"
 ---
 

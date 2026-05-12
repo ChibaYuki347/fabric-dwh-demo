@@ -14,17 +14,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: List SQL files under fabric/**.Warehouse and post-deployment
+      - name: List Fabric SQL artifacts
         run: |
-          echo "Fabric Warehouse item files:" | tee -a "$GITHUB_STEP_SUMMARY"
-          find fabric -path 'fabric/*.Warehouse/Schemas/*' -name '*.sql' -type f | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "Fabric Warehouse item files (legacy per-object layout):" | tee -a "$GITHUB_STEP_SUMMARY"
+          find fabric -path 'fabric/*.Warehouse/Schemas/*' -name '*.sql' -type f 2>/dev/null | tee -a "$GITHUB_STEP_SUMMARY" || true
+          echo "Fabric Warehouse project files (sqlproj layout, Fabric auto-pushed):" | tee -a "$GITHUB_STEP_SUMMARY"
+          find fabric -path 'fabric/*.Warehouse/*' \( -name '*.sqlproj' -o -name 'xmla.json' \) -type f 2>/dev/null | tee -a "$GITHUB_STEP_SUMMARY" || true
+          echo "Fabric root SQL files (seed/validate, demo path):" | tee -a "$GITHUB_STEP_SUMMARY"
+          find fabric -maxdepth 1 -name '*.sql' -type f 2>/dev/null | tee -a "$GITHUB_STEP_SUMMARY" || true
           echo "Post-deployment files:" | tee -a "$GITHUB_STEP_SUMMARY"
           find fabric/post-deployment -name '*.sql' -type f 2>/dev/null | tee -a "$GITHUB_STEP_SUMMARY" || true
 
-      - name: Fail when no Fabric Warehouse SQL is present
+      - name: Fail when no Fabric Warehouse artifact is present
         run: |
-          if [ -z "$(find fabric -path 'fabric/*.Warehouse/Schemas/*' -name '*.sql' -type f -print -quit)" ]; then
-            echo "::error::No SQL files found under fabric/*.Warehouse/Schemas. Warehouse item is missing." >&2
+          # Accept either layout:
+          #   (a) legacy per-object: fabric/*.Warehouse/Schemas/dbo/{Tables,Views}/*.sql
+          #   (b) sqlproj (Fabric auto-pushed): fabric/*.Warehouse/*.sqlproj
+          legacy=$(find fabric -path 'fabric/*.Warehouse/Schemas/*' -name '*.sql' -type f -print -quit)
+          sqlproj=$(find fabric -path 'fabric/*.Warehouse/*' -name '*.sqlproj' -type f -print -quit)
+          if [ -z "$legacy" ] && [ -z "$sqlproj" ]; then
+            echo "::error::No Fabric Warehouse artifact found (neither Schemas/*.sql nor *.sqlproj). Warehouse item is missing." >&2
             exit 1
           fi
 

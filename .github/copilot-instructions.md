@@ -5,7 +5,7 @@ This repository demonstrates migration from an existing IBM PureData / Netezza-s
 
 ## Repository Layout
 - `source_dwh/`: Synthetic Netezza-style DDL, views, ETL metadata. Never edit to look like real customer schemas.
-- `fabric/DWH_Modernization_Demo.Warehouse/`: Fabric Warehouse item (Git integration format: `.platform` + `Schemas/dbo/{Tables,Views}/*.sql`). Mirrors the SQL database project layout that Fabric round-trips.
+- `fabric/DWH_Modernization_Demo.Warehouse/`: Fabric Warehouse item. Fabric Workspace currently serializes this in **SQL Database project format** (`.platform` + `DWH_Modernization_Demo.sqlproj` + `xmla.json`). Earlier per-object layout (`Schemas/dbo/{Tables,Views}/*.sql`) is also accepted by the CI and may be restored by future Fabric versions. The canonical DDL for the demo lives in `fabric/post-deployment/`-style deploy scripts and is applied via SQL editor copy-paste; do not rely on the `.sqlproj` file as the authoring surface.
 - `fabric/00_seed_lakehouse.Notebook/`, `fabric/01_load_warehouse.Notebook/`, `fabric/02_validate.Notebook/`: Fabric Notebook items in Git integration format (`.platform` + `notebook-content.py` with `# CELL ********************` / `# MARKDOWN ********************` separators).
 - `fabric/post-deployment/`: Security DDL (`CREATE ROLE`, `GRANT`). NOT synced by Fabric Git integration; applied manually via `scripts/reset_demo.sh --security`.
 - `fabric/lakehouse/`: Bronze/Silver mapping notes.
