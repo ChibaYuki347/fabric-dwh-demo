@@ -1,12 +1,5 @@
 # Fabric notebook source
 
-# METADATA ********************
-
-# META {
-# META   "kernel_info": {
-# META     "name": "synapse_pyspark"
-# META   }
-# META }
 
 # MARKDOWN ********************
 
@@ -21,13 +14,6 @@
 # 2. **Key uniqueness** — no duplicate keys for primary identifiers.
 # 3. **NULL rate** — `RiskScore`, `RegionCode`, `ChannelCode`, `StatusCode` stay under thresholds.
 # 4. **Aggregate** — `dbo.vw_BranchBalance` sums match per-branch totals from `dbo.[Transaction]`.
-
-# METADATA ********************
-
-# META {
-# META   "language": "markdown",
-# META   "language_group": "synapse_pyspark"
-# META }
 
 # CELL ********************
 
@@ -60,13 +46,6 @@ NULL_THRESHOLDS = {
 
 # ## 1. Row counts
 
-# METADATA ********************
-
-# META {
-# META   "language": "markdown",
-# META   "language_group": "synapse_pyspark"
-# META }
-
 # CELL ********************
 
 rows = []
@@ -89,13 +68,6 @@ display(spark.createDataFrame(rows, ["Table", "Expected", "Actual", "Status"]))
 # MARKDOWN ********************
 
 # ## 2. Key uniqueness
-
-# METADATA ********************
-
-# META {
-# META   "language": "markdown",
-# META   "language_group": "synapse_pyspark"
-# META }
 
 # CELL ********************
 
@@ -127,13 +99,6 @@ display(spark.createDataFrame(rows, ["Table", "Key", "DuplicateKeyGroups", "Stat
 # MARKDOWN ********************
 
 # ## 3. NULL rate
-
-# METADATA ********************
-
-# META {
-# META   "language": "markdown",
-# META   "language_group": "synapse_pyspark"
-# META }
 
 # CELL ********************
 
@@ -167,13 +132,6 @@ display(spark.createDataFrame(
 # 
 # Compare `dbo.vw_BranchBalance` (curated) against a fresh aggregation of
 # `dbo.Account JOIN dbo.[Transaction]`. They must match per `(BranchId, TransactionDate)`.
-
-# METADATA ********************
-
-# META {
-# META   "language": "markdown",
-# META   "language_group": "synapse_pyspark"
-# META }
 
 # CELL ********************
 

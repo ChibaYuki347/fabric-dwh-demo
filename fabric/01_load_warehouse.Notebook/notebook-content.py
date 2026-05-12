@@ -1,12 +1,5 @@
 # Fabric notebook source
 
-# METADATA ********************
-
-# META {
-# META   "kernel_info": {
-# META     "name": "synapse_pyspark"
-# META   }
-# META }
 
 # MARKDOWN ********************
 
@@ -23,13 +16,6 @@
 # 2. `00_seed_lakehouse` notebook has been executed (Files/raw populated).
 # 3. `DWH_Modernization_Demo` Warehouse has been created via *Workspace settings -> Source control -> Update from Git*.
 # 4. The four tables are empty. If a previous demo loaded data, run `scripts/reset_demo.sh` first.
-
-# METADATA ********************
-
-# META {
-# META   "language": "markdown",
-# META   "language_group": "synapse_pyspark"
-# META }
 
 # CELL ********************
 
@@ -48,13 +34,6 @@ print(f"Source path:      {LAKEHOUSE_RAW}")
 # MARKDOWN ********************
 
 # ## Customer
-
-# METADATA ********************
-
-# META {
-# META   "language": "markdown",
-# META   "language_group": "synapse_pyspark"
-# META }
 
 # CELL ********************
 
@@ -85,13 +64,6 @@ print(f"loaded {df.count()} rows into dbo.Customer")
 
 # ## Branch
 
-# METADATA ********************
-
-# META {
-# META   "language": "markdown",
-# META   "language_group": "synapse_pyspark"
-# META }
-
 # CELL ********************
 
 from pyspark.sql.functions import col, to_date, to_timestamp
@@ -120,13 +92,6 @@ print(f"loaded {df.count()} rows into dbo.Branch")
 # MARKDOWN ********************
 
 # ## Account
-
-# METADATA ********************
-
-# META {
-# META   "language": "markdown",
-# META   "language_group": "synapse_pyspark"
-# META }
 
 # CELL ********************
 
@@ -159,13 +124,6 @@ print(f"loaded {df.count()} rows into dbo.Account")
 # ## Transaction
 # 
 # `Transaction` is a T-SQL reserved word, so we quote it as `dbo.[Transaction]`.
-
-# METADATA ********************
-
-# META {
-# META   "language": "markdown",
-# META   "language_group": "synapse_pyspark"
-# META }
 
 # CELL ********************
 

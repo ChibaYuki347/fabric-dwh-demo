@@ -1,12 +1,5 @@
 # Fabric notebook source
 
-# METADATA ********************
-
-# META {
-# META   "kernel_info": {
-# META     "name": "synapse_pyspark"
-# META   }
-# META }
 
 # MARKDOWN ********************
 
@@ -20,13 +13,6 @@
 # 2. Internet access is required (public GitHub raw URL).
 # 
 # This notebook is **idempotent**: re-runs overwrite the destination files.
-
-# METADATA ********************
-
-# META {
-# META   "language": "markdown",
-# META   "language_group": "synapse_pyspark"
-# META }
 
 # CELL ********************
 
@@ -63,13 +49,6 @@ print("\nSeed complete.")
 # MARKDOWN ********************
 
 # ## Verify
-
-# METADATA ********************
-
-# META {
-# META   "language": "markdown",
-# META   "language_group": "synapse_pyspark"
-# META }
 
 # CELL ********************
 
