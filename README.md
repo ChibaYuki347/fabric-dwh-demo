@@ -25,7 +25,8 @@
 | ディレクトリ | 内容 |
 |---|---|
 | `source_dwh/` | 既存 DWH 想定の合成 DDL・ビュー・ETL メタ |
-| `fabric/DWH_Modernization_Demo.Warehouse/` | Fabric Warehouse アイテム（Git integration 形式: `.platform` + `Schemas/dbo/{Tables,Views}/*.sql`） |
+| `fabric/DWH_Modernization_Demo.Warehouse/` | Fabric Warehouse アイテム。Fabric Workspace は現在 **SQL Database Project 形式**（`.platform` + `DWH_Modernization_Demo.sqlproj` + `xmla.json`）でシリアライズします。テーブル/ビュー DDL のオーサリング実体は `fabric/ddl_deploy.sql` に集約（SQL editor に貼って Run）。 |
+| `fabric/ddl_deploy.sql` | **Spark 不要**の Warehouse 再構築用 T-SQL（5 テーブル + 1 ビューを冪等に DROP IF EXISTS → CREATE）。`Invalid object name 'dbo.Customer'` が出る場合や、Fabric の "Update from Git" でテーブルが消えた場合の最初のステップ |
 | `fabric/seed_data.sql` | **Spark 不要**のデータ投入用 T-SQL（4 テーブル合計 153 行を `INSERT VALUES`、冪等）。Warehouse SQL editor に貼って Run するだけ |
 | `fabric/validate.sql` | **Spark 不要**のデータ品質検証用 T-SQL（行数 / 一意性 / NULL 率 / 集計再構成の 4 種）。`02_validate` Notebook と等価ロジック |
 | `fabric/00_seed_lakehouse.Notebook/`<br>`fabric/01_load_warehouse.Notebook/`<br>`fabric/02_validate.Notebook/` | Fabric Notebook アイテム（CSV ロード・検証用、Spark 経路） |
