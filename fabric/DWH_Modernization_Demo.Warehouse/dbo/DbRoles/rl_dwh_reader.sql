@@ -1,0 +1,1 @@
+CREATE ROLE [rl_dwh_reader];
