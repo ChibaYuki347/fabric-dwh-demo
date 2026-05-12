@@ -26,7 +26,9 @@
 |---|---|
 | `source_dwh/` | 既存 DWH 想定の合成 DDL・ビュー・ETL メタ |
 | `fabric/DWH_Modernization_Demo.Warehouse/` | Fabric Warehouse アイテム（Git integration 形式: `.platform` + `Schemas/dbo/{Tables,Views}/*.sql`） |
-| `fabric/00_seed_lakehouse.Notebook/`<br>`fabric/01_load_warehouse.Notebook/`<br>`fabric/02_validate.Notebook/` | Fabric Notebook アイテム（CSV ロード・検証用） |
+| `fabric/seed_data.sql` | **Spark 不要**のデータ投入用 T-SQL（4 テーブル合計 153 行を `INSERT VALUES`、冪等）。Warehouse SQL editor に貼って Run するだけ |
+| `fabric/validate.sql` | **Spark 不要**のデータ品質検証用 T-SQL（行数 / 一意性 / NULL 率 / 集計再構成の 4 種）。`02_validate` Notebook と等価ロジック |
+| `fabric/00_seed_lakehouse.Notebook/`<br>`fabric/01_load_warehouse.Notebook/`<br>`fabric/02_validate.Notebook/` | Fabric Notebook アイテム（CSV ロード・検証用、Spark 経路） |
 | `fabric/post-deployment/` | Workspace 同期では反映されない GRANT/CREATE ROLE。`scripts/reset_demo.sh --security` で適用 |
 | `fabric/lakehouse/` | Bronze → Silver 列マッピング設計メモ |
 | `pipelines/` | Fabric Data Factory パイプライン定義（初期 / パーティション初期 / 差分） |

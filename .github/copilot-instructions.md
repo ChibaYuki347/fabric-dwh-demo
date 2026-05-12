@@ -50,6 +50,12 @@ This repository demonstrates migration from an existing IBM PureData / Netezza-s
 - Notebooks must NOT hard-code workspace / lakehouse GUIDs. The presenter binds the lakehouse via the *Add lakehouse* panel after the Notebook is created.
 - Spark -> Warehouse writes use `df.write.mode("append").synapsesql("DWH_Modernization_Demo.dbo.<Table>")`. Always cast columns explicitly before write; CSV-inferred types will not match Warehouse types.
 
+## Spark-free Demo Path
+- `fabric/seed_data.sql`: Idempotent T-SQL `INSERT VALUES` covering all 4 tables (Customer 25, Branch 8, Account 40, Transaction 80 = 153 rows). Generated mechanically from `inventory/sample_data/*.csv`. Re-run is safe (each table is `DELETE`'d first).
+- `fabric/validate.sql`: T-SQL replica of the `02_validate` Notebook's 4 checks (row count, key uniqueness, NULL rate, aggregate reconciliation against `vw_BranchBalance`). Returns 5 result grids with explicit PASS markers.
+- Both files are designed to run in the Warehouse SQL editor (TDS endpoint, port 1433) and do NOT need Spark, Lakehouse, or Notebooks. This is the default demo path; the Notebook path is the supplementary one. When Fabric Trial Spark capacity returns HTTP 430 `TooManyRequestsForCapacity`, switch to these SQL files.
+- When regenerating `seed_data.sql` (e.g., after updating sample CSVs), keep the existing `INSERT VALUES` style and the leading `DELETE FROM` for idempotency. Do not introduce `MERGE` or `COPY INTO` (would re-introduce Spark / external dependencies).
+
 ## API Rules
 - Define the OpenAPI contract first, then implement against curated Fabric outputs.
 - Do not expose raw operational tables.
