@@ -3,6 +3,7 @@ CUSTOMER,TABLE,CORE,dbo,1000000,daily,medium,high
 ACCOUNT,TABLE,CORE,dbo,5000000,daily,medium,high
 TRANSACTION,TABLE,CORE,dbo,250000000,intraday,high,high
 BRANCH,TABLE,CORE,dbo,1500,monthly,low,medium
+BRANCH_REGION,TABLE,CORE,dbo,20,monthly,low,medium
 VW_BRANCH_BALANCE,VIEW,MART,dbo,NA,daily,medium,high
 DAILY_BALANCE,TABLE,MART,dbo,5000000,daily,medium,high
 DAILY_BALANCE_JOB,ETL,ETL,pipeline,NA,daily,high,high

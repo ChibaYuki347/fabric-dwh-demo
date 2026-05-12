@@ -167,34 +167,49 @@ Constraints:
 
 ## カード #7: ライブデモ — Netezza → T-SQL 変換 (Scene 1)
 
-- **目的**: ライブデモ前半で、Copilot が変換した T-SQL を実ファイルとして `.Warehouse/Schemas/dbo/Tables/` に作成し、merge して Fabric に反映する流れを起動する。
-- **開いておくファイル**: `source_dwh/ddl/nz_account.sql`、`fabric/DWH_Modernization_Demo.Warehouse/Schemas/dbo/Tables/Customer.sql`（出力スタイルの見本）
+- **目的**: ライブデモ前半で、Copilot が変換した T-SQL を **`fabric/` 直下の deploy 用 SQL ファイル**として書き出し、merge して Fabric Warehouse の SQL editor で paste & Run する流れを起動する。
+- **背景**: Fabric Workspace は Warehouse の Git シリアライズを `.sqlproj` 形式に変更しており、`Schemas/dbo/Tables/*.sql` 形式の per-object ファイルは Update from Git で drop される。そのため Scene 1 のターゲットは Warehouse item 配下ではなく `fabric/` 直下の deploy script。canonical な DDL 集約先は `fabric/ddl_deploy.sql`、Scene 1 で新規追加するのは `fabric/branch_region_deploy.sql`。
+- **開いておくファイル**: `source_dwh/ddl/nz_branch_region.sql`、`fabric/ddl_deploy.sql`（出力スタイルの見本）
 - **プロンプト本文**:
 
 ```text
-We are doing a LIVE migration demo. The Fabric Warehouse item lives at
-fabric/DWH_Modernization_Demo.Warehouse/Schemas/dbo/Tables/.
+We are doing a LIVE migration demo for adding a new dimension table
+dbo.Branch_Region. This is a lookup table that resolves Branch.RegionCode
+(EAST / CENTRAL / WEST / NORTH / SOUTH / VIRTUAL) to a human-readable
+region name + country code, joinable to dbo.Branch.
 
-Convert the open Netezza DDL (nz_account.sql) into a new file
-fabric/DWH_Modernization_Demo.Warehouse/Schemas/dbo/Tables/Account.sql.
+Convert the open Netezza DDL (source_dwh/ddl/nz_branch_region.sql) into a
+new deployable T-SQL script:
 
-Rules:
-- Match the file style of Customer.sql exactly: opening "-- Fabric Warehouse target ported from ..."
-  comment, then a "Mapping notes" block, then CREATE TABLE dbo.<Name> ( ... ).
-- Drop DISTRIBUTE ON; comment that it is removed.
-- TIMESTAMP -> DATETIME2(6); NUMERIC(p,s) -> DECIMAL(p,s).
-- Do NOT emit a PRIMARY KEY clause.
-- Quote reserved words as dbo.[Transaction] only when needed.
-- Keep column order identical to the source DDL.
+  fabric/branch_region_deploy.sql
 
-After producing the file, list the exact `git` commands the presenter should
-run to create a branch `live/account-table`, commit, push, and open a PR with
-`gh pr create`.
+Rules (style):
+- Match the style of fabric/ddl_deploy.sql header comments: a leading
+  block explaining purpose / usage / mapping notes.
+- The file must be idempotent: start with `DROP TABLE IF EXISTS dbo.Branch_Region;`
+  followed by `CREATE TABLE dbo.Branch_Region ( ... );`.
+- After CREATE TABLE, append a single `INSERT INTO dbo.Branch_Region (...)
+  VALUES (...), (...), ...;` covering all 6 region codes used in
+  fabric/seed_data.sql: EAST, CENTRAL, WEST, NORTH, SOUTH, VIRTUAL.
+  Use Japan-themed RegionName values (e.g. "Eastern Japan", "Central
+  Japan", ..., "Online Channel" for VIRTUAL) and CountryCode = 'JPN'.
+
+Rules (mapping):
+- Drop DISTRIBUTE ON; add a comment that it is removed.
+- TIMESTAMP -> DATETIME2(6); VARCHAR widths preserved.
+- Do NOT emit a PRIMARY KEY clause (Fabric Warehouse does not enforce PKs).
+- Use the column casing convention of fabric/ddl_deploy.sql:
+  RegionCode / RegionName / CountryCode / UpdatedAt.
+
+After producing the file, list the exact `git` commands the presenter
+should run to create a branch `live/branch-region`, commit, push, and
+open a PR with `gh pr create --fill --base main`.
 ```
 
 - **見せ場**:
-  - Copilot が**新規ファイルとして書き出す**ところ（コピペではない）。
-  - 出力末尾の `git checkout -b live/account-table && git add ... && gh pr create` を、そのままターミナルで実行できる。
+  - Copilot が**新規ファイルを生成して 6 行の INSERT まで埋める**ところ。
+  - 出力末尾の `git checkout -b live/branch-region && git add ... && gh pr create` を、そのままターミナルで実行できる。
+  - 25:00–28:00 の SQL クライマックスで `fabric/branch_region_deploy.sql` を SQL editor に paste → Run → 即座に `SELECT * FROM dbo.Branch_Region;` で 6 行確認、最後に `vw_BranchBalance` と JOIN して地域ロールアップを見せられる。
 
 ---
 
@@ -206,22 +221,32 @@ run to create a branch `live/account-table`, commit, push, and open a PR with
 
 ```text
 You are the human reviewer for this PR. The PR adds
-fabric/DWH_Modernization_Demo.Warehouse/Schemas/dbo/Tables/Account.sql.
+fabric/branch_region_deploy.sql, a deploy script that creates and seeds
+the new dimension table dbo.Branch_Region.
 
 Audit the diff with these gates:
-1. Mapping correctness vs docs/sql_dialect_mapping.md (DISTRIBUTE ON removed, TIMESTAMP -> DATETIME2(6), NUMERIC -> DECIMAL, no PK).
-2. Naming: column order matches source, casing matches existing dbo.* tables in the same folder.
-3. Safety: no DROP TABLE / TRUNCATE in the diff (sql-build.yml would block them anyway, but mention it for the audience).
-4. Tests: which tests/ files cover dbo.Account? Are thresholds explicit?
-5. Fabric Git serialization: are there any files outside fabric/*.Warehouse/Schemas/ that should be in post-deployment/ instead?
+1. Mapping correctness vs docs/sql_dialect_mapping.md (DISTRIBUTE ON
+   removed, TIMESTAMP -> DATETIME2(6), VARCHAR widths preserved, no PK).
+2. Idempotency: does the script start with DROP TABLE IF EXISTS so it
+   can be re-run safely? Are the INSERT values deterministic?
+3. Naming: column order matches source CORE.BRANCH_REGION; casing
+   matches existing dbo.* tables (RegionCode / RegionName / CountryCode).
+4. Coverage: do the 6 INSERTed rows match the RegionCode values used in
+   fabric/seed_data.sql (EAST / CENTRAL / WEST / NORTH / SOUTH / VIRTUAL)?
+   Will a JOIN dbo.Branch -> dbo.Branch_Region leave any branch unmatched?
+5. Safety: the DROP TABLE here is intended (idempotent rebuild) — note
+   that sql-build.yml's dangerous-DDL check is scoped to
+   fabric/*.Warehouse + source_dwh + tests, so fabric/ root deploy
+   scripts are correctly allowed to use DROP IF EXISTS.
 
-Output as a single concise PR review comment in Japanese, with one bullet per gate.
-End with one of: "LGTM, merge ready" / "Request changes" / "Need maintainer attention".
+Output as a single concise PR review comment in Japanese, with one
+bullet per gate. End with one of: "LGTM, merge ready" / "Request
+changes" / "Need maintainer attention".
 ```
 
 - **見せ場**:
   - 「Copilot **の出力をレビューしている**のも Copilot」という構図。
-  - ガードレールが PR ごとに自動で適用される点。
+  - ガードレールが PR ごとに自動で適用される点。CI が `DROP TABLE` を本来は弾く一方、`fabric/` 直下では deploy script として例外的に許可されている設計を明示できる。
 
 ---
 
